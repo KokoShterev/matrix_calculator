@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+#include<string.h>
+#include<ctype.h>
 
 #define MAX_DIM 5
 
@@ -115,7 +117,7 @@ void inversion(int n, float source[][MAX_DIM], float destination[][MAX_DIM]) {
 void martixMartixMult(float matrix1[][MAX_DIM], float matrix2[][MAX_DIM], float result[][MAX_DIM], int m1_rows, int m1_columns, int m2_rows, int m2_columns) {
     int i, j, k;
     if (m1_columns != m2_rows)
-        return -1;
+        return;
     for (i = 0; i < m1_rows; i++) {
         for (j = 0; j < m2_columns; j++) {
             result[i][j] = 0;
@@ -135,27 +137,125 @@ void matrixScalarMult(float matrix[][MAX_DIM], float result[][MAX_DIM], int scal
     }
 }
 
+char * cipher(char * string, char * key) {
+    int shift = 0;
+
+    for (int i = 0; i < strlen(string); i++) {
+        if (string[i] == 32) {
+            string[i] = 32;
+        } else {
+            shift = string[i] - '!';
+
+            string[i] = key[i % strlen(key)];
+
+            for (int j = 0; j < shift; j++) {
+                string[i]++;
+                if (string[i] == 127)
+                    string[i] = 33;
+            }
+        }
+    }
+
+    return string;
+}
+
+char * decipher(char * string, char * key) {
+
+    int shift = 0;
+    int safer = 0;
+
+    for (int i = 0; i < strlen(string); i++) {
+        if (string[i] == 32) {
+            string[i] = 32;
+        } else {
+            safer = key[i % strlen(key)];
+
+            while (safer != string[i]) {
+                shift++;
+                safer++;
+                if (safer == 127)
+                    safer = 33;
+            }
+            string[i] = '!' + shift;
+            shift = 0;
+        }
+    }
+    return string;
+}
+
+void ftoa(float ftocon, char * string, int size_after_p) {
+    int before_point = (int) ftocon;
+    float after_point = ftocon - (float) before_point;
+    for (int i = 0; i < size_after_p; i++) {
+        after_point = after_point * 10.0;
+    }
+
+    int safer = before_point;
+    int space = 0;
+
+    while (safer) {
+        space++;
+        safer = safer / 10;
+    }
+
+    itoa(before_point, string, 10);
+    strcat(string, ".");
+    if (space == 0)
+        space = 1;
+    space++;
+    itoa(after_point, & string[space], 10);
+}
+
+void write(float matrix[][MAX_DIM], char * key, int biggest_size_after_p) {
+    char * string = (char * ) malloc(sizeof(char) * 30);
+    FILE * fp = fopen("matrica.txt", "w");
+
+    for (int i = 0; i < MAX_DIM; i++) {
+        for (int j = 0; j < MAX_DIM; j++) {
+            ftoa(matrix[i][j], string, biggest_size_after_p);
+            cipher(string, key);
+            fprintf(fp, "%s ", string);
+        }
+        fprintf(fp, "\n");
+    }
+
+    fclose(fp);
+    free(string);
+}
+
+void read(char * key, float matrix[][MAX_DIM]) {
+    char * string = (char * ) malloc(sizeof(char) * 30);
+    FILE * fp = fopen("matrica.txt", "r");
+
+    for (int i = 0; i < MAX_DIM; i++) {
+        for (int j = 0; j < MAX_DIM; j++) {
+            fscanf(fp, "%s", string);
+            decipher(string, key);
+            matrix[i][j] = atof(string);
+        }
+    }
+    fclose(fp);
+    free(string);
+}
+
 int main() {
     // srand((unsigned) time(NULL));
     int n = 5;
+    int biggest_size_after_p = 0;
+    char * key = strdup("key");
     // float matrix[MAX_DIM][MAX_DIM] = {0};
     // for (int i = 1; i < n; i++){
     //     for (int j = 1; j < n; j++){
     //         matrix[i][j] = rand() % 21 - 10;
     //     }
     // }
-    float matrix[MAX_DIM][MAX_DIM] = {
-        {0,0,0,0,0},
-        {0,0,0,0,1},
-        {0,1,0,0,0},
-        {0,0,1,0,0},
-        {0,0,0,1,0}};
-    float matrix2[MAX_DIM][MAX_DIM] = {
-        {0,0,0,0,0},
-        {0,0,0,0,2},
-        {0,3,0,0,0},
-        {0,0,4,0,0},
-        {0,0,0,5,0}};
+    float matrix[MAX_DIM][MAX_DIM] = {0};
+    //     {0,0,0,0,0},
+    //     {0,0,0,0,1},
+    //     {0,1,0,0,0},
+    //     {0,0,1,0,0},
+    //     {0,0,0,1,0}};
+    float matrix2[MAX_DIM][MAX_DIM] = {0};
     // printMatrix(n, matrix);
     // printf("\n");
     // printf("%f\n", determinant(n, matrix));
@@ -171,9 +271,15 @@ int main() {
     char option1;
     scanf("%c", & option1);
     if (option1 == 'F' || option1 == 'f') {
-        //chetene ot file
+        read(key, matrix);
     } else if (option1 == 'C' || option1 == 'c') {
         //chetene ot konzola
+        printf("Enter 4x4 matrix:\n");
+        for (int i = 1; i < n; i++) {
+            for (int j = 1; j < n; j++) {
+                scanf("%f", & matrix[i][j]);
+            }
+        }
     } else {
         printf("invalid choice");
     }
@@ -181,13 +287,14 @@ int main() {
     int option2;
     while (1) {
         system("cls||clear");
-        printf("1. Умножение на матрица със скалар\n");
-        printf("2. Умножение на матрица с матрица\n");
-        printf("3. Намиране на детерминанта на матрица с размери до 4х4\n");
-        printf("4. Деление на матрица по скалар\n");
-        printf("5. Намиране на обратна матрица\n");
-        printf("6. Транспониране на матрица\n");
-        printf("7. Exit\n");
+        printf("1. Multiply matrix with scalar\n");
+        printf("2. Multiply matrix with matrix\n");
+        printf("3. Find determinant of matrix with 4x4 size\n");
+        printf("4. Devide matrix with scalar\n");
+        printf("5. Find inversed matrix\n");
+        printf("6. Transportation of matrix\n");
+        printf("7. Save matrix to file\n");
+        printf("8. Exit\n");
         scanf("%i", & option2);
 
         if (option2 == 1) {
@@ -199,6 +306,22 @@ int main() {
             printMatrix(n, destination);
         } else if (option2 == 2) {
             //Умножение на матрица с матрица
+            printf("To get the 2nd matrix from file enter 'F'\nTo get the 2nd matrix from the console enter 'C'\n");
+            getchar();
+            scanf("%c", & option1);
+            if (option1 == 'F' || option1 == 'f') {
+                read(key, matrix2);
+            } else if (option1 == 'C' || option1 == 'c') {
+                //chetene ot konzola
+                printf("Enter 4x4 matrix:\n");
+                for (int i = 1; i < n; i++) {
+                    for (int j = 1; j < n; j++) {
+                        scanf("%f", & matrix2[i][j]);
+                    }
+                }
+            } else {
+                printf("invalid choice");
+            }
             martixMartixMult(matrix, matrix2, destination, n, n, n, n);
             printMatrix(n, destination);
         } else if (option2 == 3) {
@@ -220,6 +343,12 @@ int main() {
             transposition(n, matrix, destination);
             printMatrix(n, destination);
         } else if (option2 == 7) {
+            printf("\n");
+            printMatrix(MAX_DIM, destination);
+            printf("Enter the most numbers after the desimal point: ");
+            scanf("%i", & biggest_size_after_p);
+            write(destination, key, biggest_size_after_p);
+        } else if (option2 == 8) {
             return 0;
         } else {
             printf("invalid choice");
