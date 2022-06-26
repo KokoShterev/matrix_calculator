@@ -111,34 +111,123 @@ void inversion(int n, float source[][MAX_DIM], float destination[][MAX_DIM]) {
         }
     }
 }
-int main() {
-    srand((unsigned) time(NULL));
-    int n = 5;
-    float matrix[MAX_DIM][MAX_DIM] = {0};
-    for (int i = 1; i < n; i++){
-        for (int j = 1; j < n; j++){
-            matrix[i][j] = rand() % 21 - 10;
+
+void martixMartixMult(float matrix1[][MAX_DIM], float matrix2[][MAX_DIM], float result[][MAX_DIM], int m1_rows, int m1_columns, int m2_rows, int m2_columns) {
+    int i, j, k;
+    if (m1_columns != m2_rows)
+        return -1;
+    for (i = 0; i < m1_rows; i++) {
+        for (j = 0; j < m2_columns; j++) {
+            result[i][j] = 0;
+            for (k = 0; k < m1_columns; k++) {
+                result[i][j] += matrix1[i][k] * matrix2[k][j];
+            }
         }
     }
-    // float matrix[MAX_DIM][MAX_DIM] = {
-    //     {0,0,0,0,0},
-    //     {0,0,0,0,1},
-    //     {0,1,0,0,0},
-    //     {0,0,1,0,0},
-    //     {0,0,0,1,0}
-    // };
-    printMatrix(n, matrix);
-    printf("\n");
-    printf("%f\n", determinant(n, matrix));
-    printf("\n");
-    float destination[MAX_DIM][MAX_DIM] = {
-        0
-    };
-    inversion(n, matrix, destination);
-    // division(n, 4, matrix, destination);
-    // transposition(n, matrix, destination);
-    printMatrix(n, destination);
+}
+
+void matrixScalarMult(float matrix[][MAX_DIM], float result[][MAX_DIM], int scalar, int m_rows, int m_columns) {
+    int i, j;
+    for (i = 0; i < m_rows; i++) {
+        for (j = 0; j < m_columns; j++) {
+            result[i][j] = scalar * matrix[i][j];
+        }
+    }
+}
+
+int main() {
+    // srand((unsigned) time(NULL));
+    int n = 5;
+    // float matrix[MAX_DIM][MAX_DIM] = {0};
+    // for (int i = 1; i < n; i++){
+    //     for (int j = 1; j < n; j++){
+    //         matrix[i][j] = rand() % 21 - 10;
+    //     }
+    // }
+    float matrix[MAX_DIM][MAX_DIM] = {
+        {0,0,0,0,0},
+        {0,0,0,0,1},
+        {0,1,0,0,0},
+        {0,0,1,0,0},
+        {0,0,0,1,0}};
+    float matrix2[MAX_DIM][MAX_DIM] = {
+        {0,0,0,0,0},
+        {0,0,0,0,2},
+        {0,3,0,0,0},
+        {0,0,4,0,0},
+        {0,0,0,5,0}};
     // printMatrix(n, matrix);
+    // printf("\n");
+    // printf("%f\n", determinant(n, matrix));
+    // printf("\n");
+    float destination[MAX_DIM][MAX_DIM] = {0};
+    // inversion(n, matrix, destination);
+    // // division(n, 4, matrix, destination);
+    // // transposition(n, matrix, destination);
+    // printMatrix(n, destination);
+    // // printMatrix(n, matrix);
+
+    printf("To get matrix from file enter 'F'\nTo get matrix from the console enter 'C'\n");
+    char option1;
+    scanf("%c", & option1);
+    if (option1 == 'F' || option1 == 'f') {
+        //chetene ot file
+    } else if (option1 == 'C' || option1 == 'c') {
+        //chetene ot konzola
+    } else {
+        printf("invalid choice");
+    }
+
+    int option2;
+    while (1) {
+        system("cls||clear");
+        printf("1. Умножение на матрица със скалар\n");
+        printf("2. Умножение на матрица с матрица\n");
+        printf("3. Намиране на детерминанта на матрица с размери до 4х4\n");
+        printf("4. Деление на матрица по скалар\n");
+        printf("5. Намиране на обратна матрица\n");
+        printf("6. Транспониране на матрица\n");
+        printf("7. Exit\n");
+        scanf("%i", & option2);
+
+        if (option2 == 1) {
+            //Умножение на матрица със скалар
+            int scalar;
+            printf("Enter a multiplier\n");
+            scanf("%i", & scalar);
+            matrixScalarMult(matrix, destination, scalar, n, n);
+            printMatrix(n, destination);
+        } else if (option2 == 2) {
+            //Умножение на матрица с матрица
+            martixMartixMult(matrix, matrix2, destination, n, n, n, n);
+            printMatrix(n, destination);
+        } else if (option2 == 3) {
+            //Намиране на детерминанта на матрица с размери до 4х4
+            printf("%f\n", determinant(n, matrix));
+        } else if (option2 == 4) {
+            //Деление на матрица по скалар
+            int divisor;
+            printf("Enter a divisor: ");
+            scanf("%i", & divisor);
+            division(n, divisor, matrix, destination);
+            printMatrix(n, destination);
+        } else if (option2 == 5) {
+            //Намиране на обратна матрица
+            inversion(n, matrix, destination);
+            printMatrix(n, destination);
+        } else if (option2 == 6) {
+            //Транспониране на матрица
+            transposition(n, matrix, destination);
+            printMatrix(n, destination);
+        } else if (option2 == 7) {
+            return 0;
+        } else {
+            printf("invalid choice");
+        }
+        printf("Press enter to continue\n");
+        getchar();
+        getchar();
+    }
 
     return 0;
 }
